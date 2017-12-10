@@ -1,42 +1,77 @@
 function manualActigraphyQC()
 
     dir0 = input('Which directory? ');
-    pp = 1;
-    pp0 = 0;
     
-    while pp == 1
-        inputStr = input('Event transition label: ');
-        trange = input('Time window (sec): '); 
-    
-        if dir0(end) ~= '/'
+    if dir0(end) ~= '/'
             dir0 = [dir0 '/'];
         end
+    q=1;
+    files0 = dir(dir0);
+    for j = 1:length(files0)
+        if length(files0(j).name) == 5
+            patients{q} = files0(j).name;
+            disp(['(' num2str(q) ') ' patients{q}])
+            q = q + 1;
+        end
+    end
+
+    patientChoice = input('Choose a patient: ');
+
+    dir0 = [dir0 patients{patientChoice} '/'];
+
+    dir0Act = [dir0 'actigraphy/raw/'];
+    dir0RC = [dir0 'redcap/processed/'];
+    
+    pp = 1;
+    pp0 = 0;
+    while pp == 1
         
-        files = dir(dir0);
+        files = dir(dir0Act);
         
         if pp0 == 0
             % Import Data
             disp('Importing...')
             for p0 = 1:length(files)
                 try
-                    if files(p0).name(end-3:end) == '.csv'
+                    if isempty(findstr(files(p0).name,'acc.csv')) == 0
                         disp(files(p0).name)
-                        if files(p0).name(end-4) == 'c'
-                            disp('acc')
-                            data = importdata([dir0 files(p0).name]); acc = data.data;
-                        elseif files(p0).name(end-4) == 'p'
-                            disp('temp')
-                            data = importdata([dir0 files(p0).name]); temp = data.data;
-                        elseif files(p0).name(end-4) == 'a'
-                            disp('eda')
-                            data = importdata([dir0 files(p0).name]); eda = data.data;
-                        end
+                        data = importdata([dir0Act files(p0).name]); acc = data.data;
+                    elseif isempty(findstr(files(p0).name,'temp.csv')) == 0
+                        disp(files(p0).name)
+                        data = importdata([dir0Act files(p0).name]); temp = data.data;
+                    elseif isempty(findstr(files(p0).name,'eda.csv')) == 0
+                        disp(files(p0).name)
+                        data = importdata([dir0Act files(p0).name]); eda = data.data;
                     end
                 end
             end
             pp0 = 1; clear p0
             disp('Importing complete.')
         end
+        
+        fprintf('%s\n%s\n%s\n%s\n','(1) still','(2) slow','(3) moderate','(4) vigorous');
+        transtype = input('Transition type: ');
+        if transtype == 1
+            transout0 = strsplit(evalc('system([''cat '' dir0RC ''DIA_'' patients{patientChoice} ''_redcap_events_trans.csv | grep still'']);'),'\n');
+        elseif transtype == 2
+            transout0 = strsplit(evalc('system([''cat '' dir0RC ''DIA_'' patients{patientChoice} ''_redcap_events_trans.csv | grep slow'']);'),'\n');
+        elseif transtype == 3
+            transout0 = strsplit(evalc('system([''cat '' dir0RC ''DIA_'' patients{patientChoice} ''_redcap_events_trans.csv | grep moderate'']);'),'\n');
+        elseif transtype == 4
+            transout0 = strsplit(evalc('system([''cat '' dir0RC ''DIA_'' patients{patientChoice} ''_redcap_events_trans.csv | grep vigorous'']);'),'\n');
+        end
+
+        q = 1;
+        for j = 1:length(transout0)
+            if isempty(findstr(transout0{j},patients{patientChoice})) == 0
+                transout{q} = transout0{j};
+                disp(['(' num2str(q) ') ' transout{q}])
+                q = q + 1;
+            end
+        end
+        inputStrChoice = input('Transition to analyze: ');
+        inputStr = transout{inputStrChoice};
+        trange = input('Time window (sec): ');
         
         qrc = find(inputStr == ':'); qrc = qrc(end);
         inputStr2 = strsplit(inputStr,' '); inputStr2 = strsplit(inputStr2{4},':');
@@ -109,10 +144,15 @@ function manualActigraphyQC()
             end
             savefig(h0, [dir0 '/figures/' inputStr '-' num2str(trange) 'sec' '.fig']);
             saveas(h0, [dir0 '/figures/' inputStr '-' num2str(trange) 'sec' '.eps']);
+            saveas(h0, [dir0 '/figures/' inputStr '-' num2str(trange) 'sec' '.png']);
         end
         
         pp = input('Repeat for another time window? (1=yes): ');
         
+    end
+    savedataYN = input('Save data? (1=yes): ');
+    if savedataYN == 1
+        save([dir0 'output.mat'],'acc','temp','eda');
     end
 end
 
