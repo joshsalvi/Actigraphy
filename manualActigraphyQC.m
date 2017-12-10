@@ -1,4 +1,34 @@
 function manualActigraphyQC()
+%
+% Actigraphy QC Analysis
+% ----------------------
+% ABOUT: This software performs a user-guided assessment of wrist
+% actigraphy data. 
+%
+% USE: manualactigraphyQC()
+%       (1) The program will first ask for a directory in str format. Choose
+%       the parent directory in which all patients are listed.
+%       e.g. '~/Baker/Actigraphy/' or '~/Baker/Actigraphy'
+%       (2) You will then be directed to select a patient from a list. Data
+%       are then imported automatically from that patient's actigraphy
+%       folder.
+%       (3) Select a type of transition (still, slow, moderate, or
+%       vigorous). A list of associated transitions from the REDCap data
+%       will then be displayed. Choose an appropriate transition.
+%       (4) Choose a time window (sec).
+%       (5) Actigraphy data are then plotted in a 2x2 window. You can
+%       choose to save this figure.
+%       (6) You can choose to repeat the analysis for other transition
+%       events and to save associated figures.
+%       (7) Finally choose to save the actigraphy data in MAT format if you
+%       so desire. Note that this step will not affect future runs of the
+%       program at this time.
+%
+% ----------------------
+% Author: Joshua D. Salvi
+% josh.salvi@gmail.com
+% ----------------------
+%
 
     dir0 = input('Which directory? ');
     
